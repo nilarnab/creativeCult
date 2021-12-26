@@ -37,7 +37,7 @@ class Auth extends Controller
                 ]
             );
         } else {
-            
+
         }
 
 
@@ -48,7 +48,7 @@ class Auth extends Controller
             'id' => 1,
             'message' => 'success'
         ]);
-        
+
     }
 
     public function login(Request $request)
@@ -64,7 +64,7 @@ class Auth extends Controller
         */
 
         // echo "Login engine working \n";
-        
+
         // $data => [email, password]
         $data = $request->all();
         // print_r($data);
@@ -74,14 +74,14 @@ class Auth extends Controller
         // print_r($session_info);
 
         // return $session_info;
-                
+
 
         if ($session_info['id'] == 1)
         {
             $user = $session_info['user'];
 
             $response = $this->create_session($user);
-            
+
             return json_encode(
                 [
                     'id' => 1,
@@ -95,9 +95,9 @@ class Auth extends Controller
 
         else
         {
-            if ($session_info['verdict'] = 'logged in')
+            if ($session_info['verdict'] == 'logged in')
             {
-                
+
                 return json_encode(
                     [
                         'id' => 1,
@@ -122,8 +122,8 @@ class Auth extends Controller
             }
 
         }
-        
-        
+
+
     }
 
 
@@ -147,7 +147,7 @@ class Auth extends Controller
             'message' => 'session created successfully',
             'session_code' => $session_code
         ]);
-        
+
     }
 
     private function get_current_session($email)
@@ -159,8 +159,8 @@ class Auth extends Controller
                     session: 0 or 1, 0 is absent, 1 present
                     creds :
                         {
-                            name: 
-                            email: 
+                            name:
+                            email:
                         }
                 }
         */
@@ -220,7 +220,7 @@ class Auth extends Controller
             );
         }
 
-        
+
     }
 
 
