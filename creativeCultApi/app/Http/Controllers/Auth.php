@@ -14,7 +14,15 @@ class Auth extends Controller
     public function register(Request $request)
     {
 
-        /* untested code, flying blind */
+        // Checking if desired fields are present
+        if (!$request->has('name', 'email', 'password'))
+        {
+            return json_encode([
+                'id' => 0,
+                'message' => 'Does not have required fields'
+            ]);
+        }
+
         $data = $request->all();
 
         $user = new Client;
@@ -65,6 +73,14 @@ class Auth extends Controller
 
         // echo "Login engine working \n";
 
+        if (!$request->has('email', 'password'))
+        {
+            return json_encode([
+                'id' => 0,
+                'message' => 'Does not have required fields'
+            ]);
+        }
+
         // $data => [email, password]
         $data = $request->all();
         // print_r($data);
@@ -80,7 +96,7 @@ class Auth extends Controller
         {
             $user = $session_info['user'];
 
-            $response = $this->create_session($user);
+            $response = json_decode($this->create_session($user), TRUE);
 
             return json_encode(
                 [
@@ -88,15 +104,17 @@ class Auth extends Controller
                     'verdict' => 'success',
                     'message' => 'new login complete',
                     'user' => $user,
-                    'session_info' => $session_info
+                    'session_info' => $response
                 ]
                 );
         }
 
         else
         {
+            // session already exists
             if ($session_info['verdict'] == 'logged in')
             {
+                $user = $session_info['user'];
 
                 return json_encode(
                     [
@@ -204,7 +222,8 @@ class Auth extends Controller
                     'id' => 0,
                     'verdict' => 'logged in',
                     'message' => 'user already logged in',
-                    'data' => $user
+                    'token' => $session[0]['session_code'],
+                    'user' => $user
                 ]
             );
         }
