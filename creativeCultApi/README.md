@@ -92,7 +92,7 @@ Fields
 
 2. Else id is 0
 
-### Create Event
+### Give Marks
 
 /give_points
 
