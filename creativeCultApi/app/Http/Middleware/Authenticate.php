@@ -45,9 +45,22 @@ class Authenticate extends Middleware
 
                 // this code is left empty for now
 
-                // Check if the business corresponds to the access level
+                /* Check if the business corresponds to the access level
+
+                    This code is not to be altered
+                    To add a new business, just add a new entry in the database
+                */
+
+
+//
+
+//                echo "getting the user ".$session_situation['user_id'];
                 $user = Client::where('client_id', $session_situation['user_id'])->get()[0];
+
+//                echo "and here";
+
                 $access_required = PageAction::with('page_action')->where('page_name', $request['business'])->get()[0];
+
 
                 if ($access_required['page_action']['min_access_required'] <= $user['access'])
                 {
@@ -71,7 +84,7 @@ class Authenticate extends Middleware
 
         else
         {
-            $message = "Session not found";
+            $message = "Session not found ".$request['client_id']."as bus";
         }
 
         return redirect('/reject?msg='.$message);

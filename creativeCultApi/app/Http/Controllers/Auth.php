@@ -163,7 +163,7 @@ class Auth extends Controller
             'id'=> 1,
             'verdict' => 'success',
             'message' => 'session created successfully',
-            'session_code' => $session_code
+            'token' => $session_code
         ]);
 
     }
@@ -244,4 +244,14 @@ class Auth extends Controller
 
 
     // private function is_clear_to
+
+    public function logout(Request $request)
+    {
+        Session::where('user_id', $request['user_id'])->
+        update(
+            [
+                'is_alive' => 0
+            ]
+        );
+    }
 }

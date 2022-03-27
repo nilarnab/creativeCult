@@ -113,3 +113,18 @@ Fields
             'message' => 'Points updated successfully'
        }
 2. Else id is 0
+
+##  Request managemenet
+
+tables
+
+requests
+- id (PK AI)
+- requester_id (int)
+- acceptor_id (int)
+- open_for(all, certified) * requires table
+- pic (BLOB)
+- is_delivery (int) -> is delivery needed
+- expected cost
+- expected time
+- stage (1, 2, 3, 4: waiting_for_acceptor, taken_order, ready_in_few_days, completed) * requires table

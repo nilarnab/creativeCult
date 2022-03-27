@@ -8,6 +8,7 @@ use App\Models\Session;
 use Illuminate\Http\Request;
 use App\Models\EventDetail;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class EventManager extends Controller
 {
@@ -26,6 +27,8 @@ class EventManager extends Controller
          *  has to business to MAKE_NEW_EVENT
          */
 
+
+        /* Business validation */
         if ($request['business'] != 'MAKE_NEW_EVENT')
         {
             return json_encode(
@@ -36,6 +39,7 @@ class EventManager extends Controller
             );
         }
 
+        // Finding if all keys are present
         if (!$request->has('token', 'business', 'starting_datetime', 'ending_datetime', 'event_name', 'description'))
         {
             return json_encode([
@@ -44,12 +48,14 @@ class EventManager extends Controller
             ]);
         }
 
+        // validation of keys
         $validator = Validator::make($request->all(), [
             'event_name' => 'required|unique:event_details|max:255',
             'starting_datetime' => 'required',
             'ending_datetime' => 'required',
         ]);
 
+        // take action if validaiton fails
         if ($validator->fails()) {
             return json_encode(
                 [
@@ -58,6 +64,8 @@ class EventManager extends Controller
                 ]
             );
         }
+
+        /* Body of the api */
 
         $event_insertable = new EventDetail();
 
@@ -69,6 +77,7 @@ class EventManager extends Controller
 
         $event_insertable->save();
 
+        /* Return value */
         return json_encode(
             [
                 'id' => 1,
@@ -77,15 +86,16 @@ class EventManager extends Controller
         );
     }
 
+
     public function give_mark(Request $request)
     {
         /*
          * Updates the mark column of events
          *
          * expecting
-         * 1. user_id
-         * 2. event_id
-         * 3. pic (LONGBLOB)
+         * 1. entry_id
+         * 2.
+         * 3.
          * 4. points
          *
          */
@@ -101,7 +111,7 @@ class EventManager extends Controller
         }
 
 
-        if (!$request->has('token', 'business', 'user_id', 'event_id', 'pic', 'points'))
+        if (!$request->has('token', 'business', 'entry_id', 'points'))
         {
             return json_encode([
                 'id' => 0,
@@ -110,9 +120,7 @@ class EventManager extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required',
-            'event_id' => 'required',
-            'pic' => 'required',
+            'entry_id' => 'required',
             'points' => 'required',
         ]);
 
@@ -125,14 +133,9 @@ class EventManager extends Controller
             );
         }
 
-
-        echo "Auth complete \n";
-
-
         EventEntry::where(
             [
-                'user_id' => $request['user_id'],
-                'event_id' => $request['event_id']
+                'id' => $request['entry_id'],
             ]
         ) -> update(
             [
@@ -152,4 +155,138 @@ class EventManager extends Controller
 
 
     }
+
+
+    function show_events(Request $request)
+    {
+        // security not applied
+        // all events are public
+        $entries = EventDetail::with('has_entry')->orderBy('starting_time', 'DESC') ->get();
+        return $entries;
+    }
+
+    public function show_event_details(Request $request)
+    {
+        return EventEntry::with('has_participant', 'has_event')->where('event_id', $request['event_id'])->get();
+
+    }
+
+    public function entry_details(Request $request)
+    {
+        // entry id
+//        return $request->all();
+        return EventEntry::with('has_participant', 'has_event')->where('id', $request['entry_id'])->get();
+    }
+
+    public function insert_entry(Request $request)
+    {
+        /*
+         * Insert entry
+         *
+         */
+
+//        return $request->all();
+
+        $old_entry = EventEntry::where('event_id', $request['event_id'])->where('user_id', $request['user_id'])->get();
+
+        if (sizeof($old_entry) > 0)
+        {
+            return json_encode(
+                [
+                    'id' => 0,
+                    'message' => 'Entry already exists'
+                ]
+            );
+        }
+
+        $new_entry = new EventEntry();
+
+        $new_entry->event_id = $request['event_id'];
+        $new_entry->user_id = $request['user_id'];
+        $new_entry->pic = $request['pic'];
+
+        $new_entry->save();
+
+        return json_encode(
+            [
+                'id' => 1,
+                'message' => 'Success'
+            ]
+        );
+
+
+    }
+
+    public function show_attended_events(Request $request)
+    {
+        /*
+         * Shows all the events attended by the user
+         *
+         * $request -> user_id
+         *
+         */
+
+
+        $user_id = $request['user_id'];
+        $all_events = EventDetail::all();
+
+        $current_time = Carbon::now();
+
+//        return $all_events;
+
+        foreach ($all_events as $event)
+        {
+            if ($this->has_attended($event['id'], $user_id))
+            {
+                $event['attended'] = true;
+            }
+            else
+            {
+                $event['attended'] = false;
+            }
+
+            if($current_time > $event['ending_time'])
+            {
+                $event['expired'] = true;
+            }
+            else
+            {
+                $event['expired'] = false;
+            }
+
+            $rows = EventEntry::where('user_id', $request['user_id'])->where('event_id', $event['id'])->get();
+
+//            return $rows;
+
+            if (sizeof($rows) == 0)
+            {
+                $event['marks'] = NULL;
+            }
+            else
+            {
+                $event['marks'] = $rows[0]['points'];
+            }
+
+        }
+
+        return $all_events;
+
+
+    }
+
+    private function has_attended($event_id, $user_id)
+    {
+        $entires = EventEntry::where('event_id', $event_id)->where('user_id', $user_id)->get();
+
+        if (sizeof($entires) > 0)
+        {
+            return true;
+        }
+        return false;
+
+    }
+
+
+
+
 }

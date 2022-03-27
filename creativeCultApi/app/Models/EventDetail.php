@@ -10,6 +10,7 @@ class EventDetail extends Model
     use HasFactory;
     protected $table = "event_details";
 
+
     public function has_entry()
     {
         return $this->hasMany(EventEntry::class, 'event_id', 'id');
