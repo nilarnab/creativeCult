@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Client;
 use App\Models\Session;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Testing\Fluent\Concerns\Has;
 
 class Auth extends Controller
 {
@@ -32,8 +34,8 @@ class Auth extends Controller
 
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:client_user|max:255',
-            'email' => 'required',
+            'name' => 'required|max:255',
+            'email' => 'required|unique:client_user',
             'password' => 'required|min:8'
         ]);
 
@@ -90,6 +92,41 @@ class Auth extends Controller
         // print_r($session_info);
 
         // return $session_info;
+
+        // checking if password works
+
+        $accounts = Client::where('email', $request['email'])->get();
+
+        if (sizeof($accounts) == 0)
+        {
+            return json_encode(
+                [
+                    'id' => 0,
+                    'message' => 'No such email exists in database'
+                ]
+            );
+        }
+        else
+        {
+            $correct_password_hash = $accounts[0]['password'];
+
+            if (Hash::check($request['password'], $correct_password_hash))
+            {
+
+            }
+            else
+            {
+                return json_encode(
+                    [
+                        'id' => 0,
+                        'message' => 'password does not match'
+                    ]
+                );
+            }
+
+
+        }
+
 
 
         if ($session_info['id'] == 1)
